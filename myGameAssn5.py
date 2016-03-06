@@ -19,7 +19,7 @@ from pygame.locals import *
 
 if not pygame.image.get_extended():
     raise SystemExit("Requires the extended image loading from SDL_image")
-
+if not pygame.font: print "No font eh?"
 
 #constants
 FRAMES_PER_SEC = 40
@@ -113,6 +113,7 @@ def main():
     "Run me for adrenaline"
     global dirtyrects
     hitCount = 0
+    isHit = False
 
     # Initialize SDL components
     pygame.init()
@@ -129,6 +130,13 @@ def main():
     background = pygame.Surface(SCREENRECT.size)
     for x in range(0, SCREENRECT.width, Img.background.get_width()):
         background.blit(Img.background, (x, 0))
+
+    font = pygame.font.Font(None, 70)
+    text = font.render("Hits: " + str(hitCount), 1, (200, 200, 200))
+    textpos = text.get_rect()
+    textpos.centerx = background.get_rect().centerx
+    background.blit(text, textpos)
+
     screen.blit(background, (0,0))
     pygame.display.flip()
 
@@ -146,11 +154,12 @@ def main():
         if keystate[K_ESCAPE] or pygame.event.peek(QUIT):
             break
 
-        # Clear screen and update actors
+        # Clear screen  and update actors
         for actor in [player] + badGuys:
             actor.erase(screen, background)
             actor.update()
-
+        
+        
         # Move the player
         direction = (keystate[K_RIGHT] - keystate[K_LEFT], keystate[K_DOWN] - keystate[K_UP])
         player.move(direction)
@@ -163,11 +172,20 @@ def main():
 
 
         hit = player.rect.collidelist(badGuys)
-        if hit != -1:
+        if hit != -1 and not isHit:
             hitCount += 1
+            isHit = True
+            for x in range(0, SCREENRECT.width, Img.background.get_width()):
+                background.blit(Img.background, (x, 0))
+            text = font.render("Hits: " + str(hitCount), 1, (200, 200, 200))
+            background.blit(text, textpos)
+            screen.blit(background, (0,0))
+            pygame.display.flip()
+
             #badGuy = badGuys[hit]
             #badGuys.remove(badGuy)
-
+        if hit == -1:
+            isHit = False
 
         # Draw everybody
         for actor in [player] + badGuys:
